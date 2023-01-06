@@ -1,10 +1,8 @@
 import os
-from openAiReponse import openAiReponse, recursiveCallAi
 from moviepy.editor import VideoFileClip
 from pprint import pprint as pp
 from pydub import AudioSegment
 from speechConverter import SpeechConverterAudio
-
 
 class AudioOrganizer():
   def __init__(self, filename):
@@ -16,6 +14,7 @@ class AudioOrganizer():
       os.mkdir(self.path)
       self.processAudio()
       self.splitAudio()
+      print('audio made')
       return
     print("audio has been made before")
 
@@ -32,16 +31,7 @@ class AudioOrganizer():
       print(i)
       chunk.export('{}/test{}.mp3'.format(self.path, i), format('mp3'))
 
-fr = AudioOrganizer('sample2.mp4')
+fr = AudioOrganizer('sample5.mp4')
 fr.processFolder()
-sr = SpeechConverterAudio('sample2')
+sr = SpeechConverterAudio('sample5')
 sr.process()
-
-for section in sr.sections:
-  print("---------------------------------")
-  print('promot: ', section)
-  print(openAiReponse("write a summary in your own words with the given context " + section + "!"))
-  print("----")
-  test = openAiReponse("You are a universtiy professor, return the most important parts and rewrite them in a summary given " + section)
-  print(test)
-  recursiveCallAi("You are a universtiy professor, return the most important parts and rewrite them in a summary given " + section)

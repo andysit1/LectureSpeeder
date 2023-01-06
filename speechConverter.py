@@ -1,61 +1,42 @@
 #imports
-from openAiReponse import textAnalysis
+from openAiResponse import recursiveCallAi, gpt2ModelSummary
+from pdfGenerator import PDF
 import whisper
 import os
-import moviepy.editor as mp
 from pydub import AudioSegment, silence
 
-#wants just a SHORT summary of content of lecture...
+model = whisper.load_model("base.en")
+maker = PDF('P', 'mm', 'Letter')
 
-model = whisper.load_model("base")
-model.cuda()
-
-# myaudio = intro = AudioSegment.from_mp3("sample2.mp4-audioExact.mp3")
-# dBFS=myaudio.dBFS
-# silence = silence.detect_silence(myaudio, min_silence_len=1000, silence_thresh=dBFS-16)
-
-# silence = [((start/1000),(stop/1000)) for start,stop in silence] #in sec
-# print(silence)
-
-#converts the speech to audio
-#may need to process audio in the future for better recongitions
-
-
-class SpeechConverterAudio(textAnalysis):
+class SpeechConverterAudio():
   def __init__(self, filename):
     self.filename = filename
-    self.text = ""
-    self.textList = []
-    self.path = ""
-    self.audioFile = ""
-    self.audio = None
-    self.videoclip = None
+    self.path = self.filename + "/"
+    self.sections = []
+    self.start = 0
 
   def process(self):
-    self.audioFile = str(self.filename) + "-audioExact.mp3"
-    self.path = "E:\Projects\CURRENT_PROJECTS\LectureSpeeder\{}".format(self.audioFile)
-    if not os.path.exists(self.path):
-      os.makedirs(self.path)
-      #intervals of 15
-    self.videoclip = mp.VideoFileClip(self.filename)
-    self.audio = self.videoclip.audio.write_audiofile(self.audioFile)
-    print('processed')
+    for file in os.listdir(self.filename):
+      if file.endswith(".mp3"):
+        self.sections.append(model.transcribe(self.path + file, fp16=False, language='English')['text'])
+
+    time = 0
+    maker.set_auto_page_break(auto = True, margin = 15)
+    maker.add_page()
+    for section in self.sections:
+      time += 15
+      text = recursiveCallAi("Rewrite context with all the information in a textbook format instead of dialog also get rid of sentences that do not make sense\n[" + section + ']')
+      text2 = text.encode('latin-1', 'replace').decode('latin-1') #important to stop encoding problems
+      maker.print_chapter(str(time), 'Lecture Notes', text2)
+    maker.output("Lecture-Notes-{}.pdf".format(self.filename))
+    print('Made')
+
+  def convertAudioText(self):
+    self.text = model.transcribe(self.filename + '/fullVideo.mp3', fp16=False, language='English')['text']
 
   def detectSilence(self):
     myAudio = AudioSegment.from_mp3(self.audioFile)
     silence = silence.detect_silence(myAudio, min_silence_len=1000, silence_thresh=-16)
     silence = [((start/1000),(stop/1000)) for start,stop in silence] #convert to sec
     print(silence)
-
-  def convertAudioText(self):
-    self.text = model.transcribe(self.audioFile, fp16=False, language='English')['text']
-
-
-sr = SpeechConverterAudio('sample3.mp4')
-sr.process()
-sr.convertAudioText()
-
-#TMR Goal
-
-
 
