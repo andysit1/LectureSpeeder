@@ -28,7 +28,7 @@ class SpeechConverterAudio():
       text = recursiveCallAi("Rewrite context with all the information in a textbook format instead of dialog also get rid of sentences that do not make sense\n[" + section + ']')
       text2 = text.encode('latin-1', 'replace').decode('latin-1') #important to stop encoding problems
       maker.print_chapter(str(time), 'Lecture Notes', text2)
-    maker.output("Lecture-Notes-{}.pdf".format(self.filename))
+    maker.output("output/Lecture-Notes-{}.pdf".format(self.filename))
     print('Made')
 
   def convertAudioText(self):
